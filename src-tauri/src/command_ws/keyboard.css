@@ -13,7 +13,7 @@ body {
   height: 100vh;
   overflow: hidden;
   display: flex;
-  gap: 3vw;
+  gap: 3vmax;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -21,19 +21,19 @@ body {
 }
 
 header {
-  height: 3vw;
+  height: 3vmax;
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 3vw;
+  gap: 3vmax;
 }
 
 .keyboard {
   display: grid;
-  grid-template-columns: repeat(30, 1.9vw);
-  grid-template-rows: repeat(6, 4.75vw);
-  grid-gap: 0.95vw;
-  padding: 1.72vw;
+  grid-template-columns: repeat(30, 1.9vmax);
+  grid-template-rows: repeat(6, 4.75vmax);
+  grid-gap: 0.95vmax;
+  padding: 1.72vmax;
   border-radius: 1.26vw;
   background: #d8dee8;
   box-shadow: -0.3vw -0.3vw 0.3vw #f3f5f8, 0.3vw 0.3vw 0.2vw #c2ccdb;
@@ -41,10 +41,10 @@ header {
 
 .control_panel {
   display: grid;
-  grid-template-columns: repeat(10, 1.9vw);
-  grid-template-rows: repeat(4, 4.75vw);
-  grid-gap: 0.95vw;
-  padding: 1.72vw;
+  grid-template-columns: repeat(10, 1.9vmax);
+  grid-template-rows: repeat(5, 4.75vmax);
+  grid-gap: 0.95vmax;
+  padding: 1.72vmax;
   border-radius: 1.26vw;
   background: #d8dee8;
   box-shadow: -0.3vw -0.3vw 0.3vw #f3f5f8, 0.3vw 0.3vw 0.2vw #c2ccdb;
@@ -112,18 +112,18 @@ svg {
 
 .check::after {
   position: absolute;
-  right: calc(0.475vw * 2);
-  top: calc(0.475vw * 1.5);
+  right: calc(0.475vmax * 2);
+  top: calc(0.475vmax * 1.5);
   content: '';
-  width: 0.475vw;
-  height: 0.475vw;
+  width: 0.475vmax;
+  height: 0.475vmax;
   background: white;
   border-radius: 20px;
 }
 
 .circle {
-  width: 3vw;
-  height: 3vw;
+  width: 3vmax;
+  height: 3vmax;
   background: #000;
   border-radius: 50%;
   background: white;
@@ -135,39 +135,7 @@ svg {
 @media screen and (max-width: 700px) {
   body {
     transform: rotate(90deg);
-    gap: 3vh;
     transition: transform 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
-  }
-
-  header {
-    height: 3vh;
-    gap: 3vh;
-  }
-
-  .circle {
-    width: 3vh;
-    height: 3vh;
-  }
-
-  .keyboard {
-    grid-template-columns: repeat(30, 1.9vh);
-    grid-template-rows: repeat(6, 4.75vh);
-    grid-gap: 0.95vh;
-    padding: 1.72vh;
-  }
-
-  .control_panel {
-    grid-template-columns: repeat(10, 1.9vh);
-    grid-template-rows: repeat(4, 4.75vh);
-    grid-gap: 0.95vh;
-    padding: 1.72vh;
-  }
-
-  .check::after {
-    right: calc(0.475vh * 2);
-    top: calc(0.475vh * 1.5);
-    width: 0.475vh;
-    height: 0.475vh;
   }
 }
 

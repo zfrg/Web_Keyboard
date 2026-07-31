@@ -1,12 +1,12 @@
 # Web KeyBoard | 局域网内的虚拟键盘
 
-技术栈：Tauri + Vue 3
+技术栈：`Tauri + Vue 3`
 
 官网：[https://keyboard.hugstars.top](https://keyboard.hugstars.top)
 
-版本情况：[版本记录](./VERSION.md)
+[版本记录](./VERSION.md)
 
-开发笔记：[开发笔记](./NOTE.md)（待完善）
+[开发笔记](./NOTE.md)（待完善）
 
 ## 使用场景
 
@@ -26,7 +26,7 @@
 3. 首次进入软件时，若 `Windows 安全中心`提示：【`是否要允许公共网络和专用网络访问此应用`】，请点击`允许`，以便在同局域网下的其他客户端访问控制此电脑。
 4. 应用启动后，点击标题的<b style="color:#41CF7D">【Web KeyBoard】</b>可跳转到官网：[https://keyboard.hugstars.top](https://keyboard.hugstars.top)
 5. 点击【`服务已启动`】下面的`控制端网址`可在本机打开控制端网页进行测试
-6. 若设备可访问公网，会在【`控制端网址`】下面生成`网址二维码`，网址二维码内容和控制端网址一致
+6. 【`控制端网址`】下面为生成`网址二维码`，网址二维码内容和控制端网址一致，方便扫码连接
 7. 控制端需要和本软件的运行设备处在`同一网络下`才可进行控制
 8. 控制端`手动输入控制端网址或者扫描二维码`即可打开控制端虚拟键盘
 9. 点击<b style="color:#41CF7D">【开机自启】</b>按钮，程序会向注册表内注册或删除对应信息，以供实现开机自启
@@ -59,3 +59,10 @@
 确保电脑存在 Webview Runtime
 检查方式：打开设置，在“应用”中，选择“安装的应用（Win10是应用和功能）”，搜索webview，如果没有找到，请安装。
 下载地址：`https://developer.microsoft.com/zh-cn/microsoft-edge/webview2`
+
+
+## License
+
+MIT © [2024] [HugStars]
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
