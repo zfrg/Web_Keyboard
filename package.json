@@ -1,8 +1,10 @@
 {
-    "name": "web_server",
+    "name": "web_keyboard",
     "private": true,
-    "version": "0.0.0",
+    "version": "0.0.3",
     "type": "module",
+    "license": "MIT",
+    "author": "HugStars",
     "scripts": {
         "dev": "vite",
         "build": "vite build",

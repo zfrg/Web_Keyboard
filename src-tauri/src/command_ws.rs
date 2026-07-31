@@ -1,9 +1,10 @@
 mod keyboard;
+use crate::screen_stream;
 use axum::response::IntoResponse;
 use axum::{
     body::Bytes,
     extract::Json,
-    http::{HeaderMap, HeaderValue},
+    http::{HeaderMap, HeaderValue, StatusCode},
     response::{Html, Response},
     routing::{get, post},
     Router,
@@ -43,10 +44,15 @@ pub async fn web_server() {
         .route("/mouse_click", post(post_mouse_click))
         .route("/lock_screen", post(post_lock_screen))
         .route("/screen_shot", get(get_screen_shot))
+        .route("/screen_stream", get(get_screen_stream))
+        .route("/start_stream_server", get(start_stream_server))
+        .route("/stop_stream_server", get(stop_stream_server))
+        .route("/stream_heartbeat", get(stream_heartbeat))
         .route("/shutdown", post(post_shutdown))
         .route("/cancel_shutdown", post(post_cancel_shutdown))
         .route("/get_keyboard_css", get(get_keyboard_css))
         .route("/get_keyboard_js", get(get_keyboard_js));
+
 
     println!("启动了Web服务子线程，监听8765端口");
 
@@ -139,6 +145,55 @@ async fn post_lock_screen() -> String {
         .expect("执行命令失败");
 
     format!("{}", "{\"status\": \"success\",\"code\": \"1\"}")
+}
+
+async fn get_screen_stream() -> Html<String> {
+    Html(keyboard::SCREEN_STREAM_HTML.to_string())
+}
+
+async fn start_stream_server() -> impl IntoResponse {
+    screen_stream::init_stream_server().await;
+    
+    if let Some(url) = screen_stream::get_stream_url().await {
+        let json = serde_json::json!({
+            "success": true,
+            "url": url
+        });
+        (StatusCode::OK, json.to_string())
+    } else {
+        let json = serde_json::json!({
+            "success": false,
+            "message": "Failed to start stream server".to_string()
+        });
+        (StatusCode::INTERNAL_SERVER_ERROR, json.to_string())
+    }
+}
+
+async fn stop_stream_server() -> impl IntoResponse {
+    match screen_stream::stop_stream_server().await {
+        Ok(_) => {
+            let json = serde_json::json!({
+                "success": true,
+                "message": "Stream server stopped"
+            });
+            (StatusCode::OK, json.to_string())
+        }
+        Err(e) => {
+            let json = serde_json::json!({
+                "success": false,
+                "message": e.to_string() as String
+            });
+            (StatusCode::INTERNAL_SERVER_ERROR, json.to_string())
+        }
+    }
+}
+
+async fn stream_heartbeat() -> impl IntoResponse {
+    let running = screen_stream::is_stream_running();
+    let json = serde_json::json!({
+        "running": running
+    });
+    (StatusCode::OK, json.to_string())
 }
 
 async fn get_screen_shot() -> Result<Response, String> {

@@ -1,10 +1,10 @@
 use local_ipaddress;
-use std::cell::Cell;
 use std::env;
 use std::os::windows::process::CommandExt;
 use std::process::Command;
 use std::process::Stdio;
 use tauri::Manager;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[tauri::command]
 pub fn get_current_dir() -> String {
@@ -42,14 +42,12 @@ pub fn open_browser_url(url: String) -> String {
 }
 
 // - 定义一个全局可变整数
-static mut GLOBAL_COUNTER: Cell<usize> = Cell::new(0);
+static GLOBAL_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 #[tauri::command]
 pub fn is_first_open() -> String {
-    // 使用 unsafe 来访问和修改全局变量
-    unsafe {
-        let count = GLOBAL_COUNTER.get();
-        GLOBAL_COUNTER.set(count + 1);
-        format!("{}", count + 1)
-    }
+    // fetch_add 返回旧值，然后自动加 1
+    let old_count = GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
+    let new_count = old_count + 1;
+    format!("{}", new_count)
 }

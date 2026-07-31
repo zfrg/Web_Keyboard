@@ -23,7 +23,14 @@ local_ipaddress = "0.1.3"
 enigo = "0.1.3"
 winreg = "0.7"
 screenshots = "0.8.10"
-image = "0.24.7" 
+image = { version = "0.24.7", features = ["jpeg_rayon"] }
+jpeg-encoder = "0.7" 
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync", "net"] }
+bytes = "1"
+async-stream = "0.3"
+futures-util = "0.3"
+tokio-tungstenite = "0.20"
+
 
 [features]
 # 该功能用于生产版本或"devPath"指向文件系统时

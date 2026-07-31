@@ -9,7 +9,30 @@ use window_shadows::set_shadow;
 mod command_reg;
 mod command_sys;
 mod command_ws;
+mod screen_stream;
 mod utils;
+
+#[tauri::command]
+async fn start_screen_stream(fps: Option<u32>, quality: Option<u8>) -> Result<String, String> {
+    let config = screen_stream::StreamConfig {
+        fps: fps.unwrap_or(10),
+        quality: quality.unwrap_or(70),
+    };
+
+    match screen_stream::start_stream_server(config).await {
+        Ok(url) => Ok(url),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn stop_screen_stream() -> Result<String, String> {
+    match screen_stream::stop_stream_server().await {
+        Ok(_) => Ok("Stream server stopped".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 
 fn main() {
     let tray_menu = SystemTrayMenu::new()
@@ -39,6 +62,8 @@ fn main() {
             command_reg::set_reg,
             command_reg::del_reg,
             command_ws::web_server,
+            start_screen_stream,
+            stop_screen_stream,
         ])
         .build(tauri::generate_context!())
         .expect("启动TAURI应用程序时出错")

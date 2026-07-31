@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>屏幕共享</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .container {
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            background: #000;
+            min-width: 400px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .error {
+            color: #ff4757;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .info {
+            color: #74b9ff;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .status.running {
+            background: #2ed573;
+            color: #000;
+        }
+
+        .status.stopped {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .status.starting {
+            background: #ffa502;
+            color: #000;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-start {
+            background: #2ed573;
+            color: #000;
+        }
+
+        .btn-start:hover {
+            background: #1dd1a1;
+        }
+
+        .btn-stop {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-stop:hover {
+            background: #ff6b81;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>屏幕共享</h1>
+    <div class="container">
+        <img id="stream-img" style="display:none;width:100%;height:auto;" />
+        <div id="loading-text" style="color:#fff;">加载中...</div>
+    </div>
+    <div class="info" id="stream-url"></div>
+    <div class="status starting" id="stream-status">启动中...</div>
+    <div class="btn-group">
+        <button class="btn-start" id="start-btn" onclick="startStream()">启动流</button>
+        <button class="btn-stop" id="stop-btn" onclick="stopStream()">停止流</button>
+    </div>
+
+    <script>
+        let videoUrl = '';
+        let errorCount = 0;
+        let prevObjectUrl = null;
+
+        async function initStream() {
+            await startStream();
+        }
+
+        async function startStream() {
+            document.getElementById('stream-status').textContent = '启动中...';
+            document.getElementById('stream-status').className = 'status starting';
+
+            try {
+                const response = await fetch('/start_stream_server');
+                const data = await response.json();
+
+                if (data.success) {
+                    videoUrl = '/video';
+
+                    document.getElementById('stream-url').textContent = '地址: ' + videoUrl;
+                    document.getElementById('stream-status').textContent = '运行中';
+                    document.getElementById('stream-status').className = 'status running';
+
+                    const img = document.getElementById('stream-img');
+                    img.style.display = 'block';
+                    document.getElementById('loading-text').style.display = 'none';
+
+                    const ip = window.location.hostname;
+                    const wsUrl = 'ws://' + ip + ':8766';
+                    console.log('Connecting to WebSocket:', wsUrl);
+                    
+                    const ws = new WebSocket(wsUrl);
+                    ws.binaryType = 'arraybuffer';
+                    
+                    ws.onopen = function() {
+                        console.log('WebSocket connected');
+                        errorCount = 0;
+                    };
+                    
+                    ws.onmessage = function(event) {
+                        if (event.data instanceof ArrayBuffer) {
+                            const blob = new Blob([event.data], { type: 'image/jpeg' });
+                            const url = URL.createObjectURL(blob);
+                            if (prevObjectUrl) {
+                                URL.revokeObjectURL(prevObjectUrl);
+                            }
+                            prevObjectUrl = url;
+                            img.src = url;
+                            errorCount = 0;
+                        } else if (typeof event.data === 'string') {
+                            showError(event.data);
+                        }
+                    };
+                    
+                    ws.onerror = function(error) {
+                        console.error('WebSocket error:', error);
+                        errorCount++;
+                        if (errorCount > 5) {
+                            showError('WebSocket连接失败');
+                        }
+                    };
+                    
+                    ws.onclose = function() {
+                        console.log('WebSocket closed');
+                    };
+                    
+                    window.streamWs = ws;
+                } else {
+                    showError(data.message || data.error || '启动失败');
+                }
+            } catch (error) {
+                showError('启动服务失败: ' + error.message);
+            }
+        }
+
+        function showError(msg) {
+            const container = document.querySelector('.container');
+            const video = document.getElementById('stream-video');
+            if (video) {
+                video.style.display = 'none';
+            }
+            document.getElementById('loading-text').style.display = 'none';
+
+            let errorDiv = document.getElementById('error-div');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'error-div';
+                errorDiv.className = 'error';
+                container.appendChild(errorDiv);
+            }
+            errorDiv.textContent = msg;
+
+            document.getElementById('stream-status').textContent = '已停止';
+            document.getElementById('stream-status').className = 'status stopped';
+        }
+
+        async function stopStream() {
+            if (window.streamWs) {
+                window.streamWs.close();
+                window.streamWs = null;
+            }
+
+            if (prevObjectUrl) {
+                URL.revokeObjectURL(prevObjectUrl);
+                prevObjectUrl = null;
+            }
+
+            try {
+                await fetch('/stop_stream_server');
+            } catch (error) {
+                console.error('停止流失败:', error);
+            }
+
+            document.getElementById('stream-status').textContent = '已停止';
+            document.getElementById('stream-status').className = 'status stopped';
+
+            const img = document.getElementById('stream-img');
+            if (img) {
+                img.src = '';
+                img.style.display = 'none';
+            }
+
+            document.getElementById('loading-text').style.display = 'block';
+
+            const errorDiv = document.getElementById('error-div');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+
+            document.getElementById('stream-url').textContent = '';
+            videoUrl = '';
+        }
+
+        initStream();
+    </script>
+</body>
+
+</html>
