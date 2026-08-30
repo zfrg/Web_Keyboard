@@ -1,6 +1,10 @@
 let CheckViscous = document.querySelector('#Viscous')
 let Viscous_List = []
 
+document.addEventListener('selectstart', e => e.preventDefault())
+document.addEventListener('dragstart', e => e.preventDefault())
+document.addEventListener('contextmenu', e => e.preventDefault())
+
 document.addEventListener('keydown', e => {
     e.preventDefault()
     console.log(e)
@@ -156,8 +160,58 @@ document.querySelector('body').addEventListener('click', e => keydown_fn(e))
 document.querySelector('body').addEventListener('touch', e => keydown_fn(e))
 document.querySelector('body').addEventListener('dblclick', e => dblclick_fn(e))
 
+let LongPressTimer = null
+let LongPressInterval = null
+let LongPressTriggered = false
+const LONG_PRESS_DELAY = 400
+const LONG_PRESS_REPEAT = 80
+
+const LongPressBlock = ['Click', 'LockScreen', 'CancelShutdown', 'CMD', 'List', 'Shutdown', 'ScreenShot', 'ScreenStream', 'Viscous', 'Change', 'Shift', 'Control', 'Meta', 'Alt', 'CapsLock']
+
+function keyByEvent(e) {
+    if (e.target.classList[0] !== 'key') return null
+    return e.target
+}
+
+function startLongPress(el) {
+    let key = el.dataset.key
+    if (!key || LongPressBlock.includes(key)) return
+    clearTimeout(LongPressTimer)
+    clearInterval(LongPressInterval)
+    LongPressTriggered = false
+    LongPressTimer = setTimeout(() => {
+        LongPressTriggered = true
+        sendKey(key)
+        LongPressInterval = setInterval(() => sendKey(key), LONG_PRESS_REPEAT)
+    }, LONG_PRESS_DELAY)
+}
+
+function sendKey(key) {
+    let xhr = new XMLHttpRequest()
+    xhr.open('post', location.href)
+    xhr.setRequestHeader("Content-Type", "application/json")
+    xhr.send(JSON.stringify({ "keys": [key] }))
+}
+
+function stopLongPress() {
+    clearTimeout(LongPressTimer)
+    clearInterval(LongPressInterval)
+    LongPressTimer = null
+    LongPressInterval = null
+}
+
+document.addEventListener('mousedown', e => { let el = keyByEvent(e); if (el) startLongPress(el) })
+document.addEventListener('mouseup', stopLongPress)
+document.addEventListener('mouseleave', stopLongPress)
+document.addEventListener('touchstart', e => { let el = keyByEvent(e); if (el) startLongPress(el) }, { passive: true })
+document.addEventListener('touchend', stopLongPress)
+document.addEventListener('touchcancel', stopLongPress)
 
 function keydown_fn(event) {
+    if (LongPressTriggered) {
+        LongPressTriggered = false
+        return
+    }
     if (event.target.classList[0] !== 'key') return
 
     let FnObj = {
