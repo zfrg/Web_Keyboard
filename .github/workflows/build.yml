@@ -67,11 +67,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAX_JOBS: 2
         with:
-          tagName: ${{ github.event.release.tag_name }}
-          releaseName: 'KeyBoard ${{ github.event.release.tag_name }}'
+          tagName: ${{ github.event.release.tag_name || github.ref_name }}
+          releaseName: 'KeyBoard ${{ github.event.release.tag_name || github.ref_name }}'
           releaseBody: ${{ github.event.release.body }}
           releaseDraft: false
-          prerelease: ${{ github.event.release.prerelease }}
+          prerelease: ${{ github.event.release.prerelease == true }}
           args: ${{ matrix.args }}
 
       - name: Upload artifacts
