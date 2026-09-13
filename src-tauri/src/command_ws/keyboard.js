@@ -207,7 +207,94 @@ document.addEventListener('touchstart', e => { let el = keyByEvent(e); if (el) s
 document.addEventListener('touchend', stopLongPress)
 document.addEventListener('touchcancel', stopLongPress)
 
+let PressedKeys = []
+let MultiTouchActive = false
+let GestureKeys = []
+let GestureSent = false
+let SuppressClick = false
+
+const ModifierKeys = ['Shift', 'Control', 'Meta', 'Alt']
+const SpecialKeys = ['Click', 'LockScreen', 'CancelShutdown', 'CMD', 'List', 'Shutdown', 'ScreenShot', 'ScreenStream', 'Viscous', 'Change']
+
+function resetMultiTouch() {
+    PressedKeys = []
+    MultiTouchActive = false
+    GestureKeys = []
+    GestureSent = false
+}
+
+function sendMultiTouchCombo(keys) {
+    let mods = keys.filter(k => ModifierKeys.includes(k))
+    let rest = keys.filter(k => !ModifierKeys.includes(k))
+    let combo = mods.concat(rest)
+
+    let xhr = new XMLHttpRequest()
+    xhr.open('post', location.href)
+    xhr.setRequestHeader("Content-Type", "application/json")
+    xhr.send(JSON.stringify({ "keys": combo }))
+}
+
+document.addEventListener('pointerdown', e => {
+    SuppressClick = false
+    let el = keyByEvent(e)
+    if (!el) return
+    let key = el.dataset.key
+    if (!key || SpecialKeys.includes(key)) return
+
+    if (PressedKeys.length === 0) {
+        GestureKeys = [key]
+    } else if (GestureKeys.indexOf(key) === -1) {
+        GestureKeys.push(key)
+    }
+    if (PressedKeys.indexOf(key) === -1) {
+        PressedKeys.push(key)
+    }
+
+    // 任意两个键同时按下即组成组合键（快捷键），长按等原有功能不受影响
+    if (PressedKeys.length >= 2) {
+        MultiTouchActive = true
+        stopLongPress()
+    }
+    else startLongPress(el)
+})
+
+document.addEventListener('pointerup', e => {
+    let el = keyByEvent(e)
+    if (!el) return
+    let key = el.dataset.key
+    if (!key) return
+    let index = PressedKeys.indexOf(key)
+    if (index === -1) return
+    PressedKeys.splice(index, 1)
+    stopLongPress()
+
+    if (!MultiTouchActive) return
+
+    if (PressedKeys.length >= 1) {
+        if (ModifierKeys.includes(key)) return
+        sendMultiTouchCombo(PressedKeys.concat([key]))
+        GestureSent = true
+        SuppressClick = true
+        return
+    }
+
+    SuppressClick = true
+    if (!GestureSent && GestureKeys.length >= 2 && GestureKeys.some(k => !ModifierKeys.includes(k))) {
+        sendMultiTouchCombo(GestureKeys)
+    }
+    resetMultiTouch()
+})
+
+document.addEventListener('pointercancel', () => {
+    if (MultiTouchActive) SuppressClick = true
+    resetMultiTouch()
+})
+
 function keydown_fn(event) {
+    if (SuppressClick) {
+        SuppressClick = false
+        return
+    }
     if (LongPressTriggered) {
         LongPressTriggered = false
         return

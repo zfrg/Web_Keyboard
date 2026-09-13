@@ -81,6 +81,7 @@ header {
   transition: all 0.2s cubic-bezier(0.09, 0.32, 0.34, 2);
   user-select: none;
   text-transform: capitalize;
+  touch-action: none;
 }
 
 .key:active,
